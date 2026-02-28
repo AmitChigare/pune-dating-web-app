@@ -24,6 +24,12 @@ class StructLoggerMiddleware(BaseHTTPMiddleware):
         
         # Execute the request
         try:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                client_ip = forwarded_for.split(",")[0].strip()
+            else:
+                client_ip = request.client.host if request.client else "unknown"
+            
             response: Response = await call_next(request)
             process_time = time.time() - start_time
             response.headers["X-Request-ID"] = request_id
@@ -34,7 +40,7 @@ class StructLoggerMiddleware(BaseHTTPMiddleware):
                 "path": request.url.path,
                 "status_code": response.status_code,
                 "duration_ms": round(process_time * 1000, 2),
-                "client_ip": request.client.host if request.client else "unknown"
+                "client_ip": client_ip
             }
             
             # Prevent logging health endpoints if they spam too much, but for now log all
@@ -49,7 +55,7 @@ class StructLoggerMiddleware(BaseHTTPMiddleware):
                 "path": request.url.path,
                 "error": str(e),
                 "duration_ms": round(process_time * 1000, 2),
-                "client_ip": request.client.host if request.client else "unknown"
+                "client_ip": client_ip
             }
             # Specifically omit printing stack trace into structured log (prevent secret leakage)
             logger.error(json.dumps(log_dict))

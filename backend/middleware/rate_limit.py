@@ -19,7 +19,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         limit_requests = 5 if is_login else RATE_LIMIT_REQUESTS
         limit_window = 900 if is_login else RATE_LIMIT_WINDOW
         
-        client_ip = request.client.host if request.client else "unknown"
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            client_ip = forwarded_for.split(",")[0].strip()
+        else:
+            client_ip = request.client.host if request.client else "unknown"
+
         try:
             redis = await get_redis_pool()
             
