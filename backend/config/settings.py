@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "db"
     POSTGRES_PORT: str = "5432"
     
+    SUPABASE_URL: Optional[str] = None
+    
     # Redis
     REDIS_HOST: str = "redis"
     REDIS_PORT: str = "6379"

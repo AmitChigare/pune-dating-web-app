@@ -17,4 +17,11 @@ export const authService = {
         const { data } = await apiClient.post<User>('/auth/register', { email, password });
         return data;
     },
+
+    googleCallback: async (accessToken: string) => {
+        const { data } = await apiClient.post<{ access_token: string, refresh_token: string }>('/auth/google/callback', {
+            access_token: accessToken
+        });
+        return data;
+    }
 };

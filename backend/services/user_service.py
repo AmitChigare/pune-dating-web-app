@@ -167,9 +167,17 @@ class UserService:
             )
         )
         
-        # Apply gender preferences if defined
+        # Filter 1: The candidate matches what the current user is looking for
         if interested_in != "Everyone":
             query = query.where(Profile.gender == interested_in)
+
+        # Filter 2: The candidate is looking for people like the current user
+        query = query.where(
+            or_(
+                Profile.interested_in == user_gender,
+                Profile.interested_in == "Everyone"
+            )
+        )
 
         # If we know the current user's location, sort candidates by nearest first
         if user_latitude is not None and user_longitude is not None:

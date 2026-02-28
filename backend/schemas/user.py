@@ -12,6 +12,9 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(max_length=64)
 
+class GoogleAuthRequest(BaseModel):
+    access_token: str
+
 class UserAccountUpdate(BaseModel):
     email: Optional[EmailStr] = None
 

@@ -12,7 +12,8 @@ from services.user_service import UserService
 from routes.dependencies import get_current_user, oauth2_scheme
 from utils.security import verify_password, create_access_token, create_refresh_token
 from jose import jwt, JWTError
-from models.user import User
+from models.user import User, UserRole
+import httpx
 
 router = APIRouter()
 
@@ -34,6 +35,53 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    access_token = create_access_token(subject=user.id, role=user.role.value)
+    refresh_token = create_refresh_token(subject=user.id, role=user.role.value)
+    
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+
+@router.post("/google/callback", response_model=Token)
+async def google_callback(request: __import__('schemas').user.GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
+    if not settings.SUPABASE_URL:
+        raise HTTPException(status_code=500, detail="Supabase URL not configured on backend")
+        
+    auth_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/user"
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            auth_url,
+            headers={"Authorization": f"Bearer {request.access_token}"}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid Supabase Session")
+            
+        user_data = response.json()
+        
+    email = user_data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google authentication did not provide an email")
+        
+    user_service = UserService(db)
+    user = await user_service.get_user_by_email(email)
+    
+    if not user:
+        # Create user via OAuth automatically
+        user = User(
+            email=email,
+            hashed_password="oauth_managed_no_password_required",
+            is_active=True,
+            is_verified=True,  # Google verifies emails
+            role=UserRole.USER,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        
+    elif not user.is_active:
+        user.is_active = True
+        await db.commit()
+        
     access_token = create_access_token(subject=user.id, role=user.role.value)
     refresh_token = create_refresh_token(subject=user.id, role=user.role.value)
     
