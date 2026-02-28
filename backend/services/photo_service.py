@@ -4,11 +4,19 @@ import shutil
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-from models.photo import Photo
+from config.settings import settings
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+try:
+    from supabase import create_client, Client
+    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+    else:
+        supabase = None
+except ImportError:
+    supabase = None
 
 class PhotoService:
     def __init__(self, db: AsyncSession):
@@ -20,10 +28,29 @@ class PhotoService:
 
         # Give unique filename
         filename = f"{uuid.uuid4()}_{file.filename}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        
+        url_path = ""
+        if supabase:
+            # Upload to Supabase Storage
+            try:
+                file_bytes = await file.read()
+                res = supabase.storage.from_('user-photos').upload(filename, file_bytes, {"content-type": file.content_type})
+                # Get public URL
+                public_url = supabase.storage.from_('user-photos').get_public_url(filename)
+                url_path = public_url
+            except Exception as e:
+                print(f"Supabase upload failed: {e}")
+                # Fallback to local
+                file_path = os.path.join(UPLOAD_DIR, filename)
+                await file.seek(0)
+                with open(file_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+                url_path = f"/{UPLOAD_DIR}/{filename}"
+        else:
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            url_path = f"/{UPLOAD_DIR}/{filename}"
 
         # Check existing photos order
         result = await self.db.execute(select(Photo).where(Photo.user_id == user_id).order_by(Photo.order.desc()))
@@ -38,7 +65,7 @@ class PhotoService:
 
         photo = Photo(
             user_id=user_id,
-            url=f"/{UPLOAD_DIR}/{filename}",
+            url=url_path,
             is_primary=is_primary,
             order=new_order
         )
@@ -71,12 +98,16 @@ class PhotoService:
                 
         await self.db.commit()
         
-        # Optional: delete file from disk
+        # Optional: delete file from storage
         try:
-            file_path = photo.url.lstrip("/")
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except Exception:
-            pass
+            if supabase and "supabase.co/storage/v1/object/public/user-photos/" in photo.url:
+                filename = photo.url.split("/")[-1]
+                supabase.storage.from_("user-photos").remove([filename])
+            else:
+                file_path = photo.url.lstrip("/")
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        except Exception as e:
+            print(f"Failed to delete file from storage: {e}")
             
         return {"status": "success"}

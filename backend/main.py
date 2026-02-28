@@ -10,7 +10,9 @@ import os
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
 )
 
 # CORS
@@ -48,7 +50,28 @@ app.include_router(reports.router, prefix=f"{settings.API_V1_STR}/reports", tags
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to the Dating App API. Docs at /docs"}
+    return {"message": "Welcome to the Dating App API."}
+
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
+from fastapi import HTTPException
+from models.user import User
+from routes.dependencies import get_current_user
+
+@app.get("/api/v1/docs", include_in_schema=False)
+async def custom_swagger_ui_html(current_user: User = Depends(get_current_user)):
+    if current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return get_swagger_ui_html(
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        title=app.title + " - Swagger UI"
+    )
+
+@app.get(f"{settings.API_V1_STR}/openapi.json", include_in_schema=False)
+async def get_openapi_endpoint(current_user: User = Depends(get_current_user)):
+    if current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return get_openapi(title=app.title, version="1.0.0", routes=app.routes)
 
 @app.get("/health")
 def health_check():

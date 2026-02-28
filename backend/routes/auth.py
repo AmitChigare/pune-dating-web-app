@@ -62,6 +62,8 @@ async def google_callback(request: __import__('schemas').user.GoogleAuthRequest,
     if not email:
         raise HTTPException(status_code=400, detail="Google authentication did not provide an email")
         
+    avatar_url = user_data.get("user_metadata", {}).get("avatar_url")
+    
     user_service = UserService(db)
     user = await user_service.get_user_by_email(email)
     
@@ -77,6 +79,17 @@ async def google_callback(request: __import__('schemas').user.GoogleAuthRequest,
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        
+        if avatar_url:
+            from models.photo import Photo
+            photo = Photo(
+                user_id=user.id,
+                url=avatar_url,
+                is_primary=True,
+                order=0
+            )
+            db.add(photo)
+            await db.commit()
         
     elif not user.is_active:
         user.is_active = True
