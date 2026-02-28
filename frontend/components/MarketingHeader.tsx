@@ -14,6 +14,11 @@ export function MarketingHeader({ redirectIfAuth = false }: MarketingHeaderProps
     const router = useRouter();
 
     useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
+            router.push('/auth/callback' + window.location.hash);
+            return;
+        }
+
         if (redirectIfAuth && token) {
             router.push('/discover');
         }
