@@ -10,9 +10,8 @@ RATE_LIMIT_WINDOW = 60
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # We can exempt paths if needed
-        if request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json"):
-            return await call_next(request)
+        # TEMPORARILY BYPASSED TO UNBLOCK USER
+        return await call_next(request)
             
         # Dynamic limits based on path
         is_login = request.url.path.endswith("/auth/login")
