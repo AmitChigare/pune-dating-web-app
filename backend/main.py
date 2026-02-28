@@ -23,8 +23,8 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if settings.ENVIRONMENT == "production" else ["*"],
-    allow_origin_regex=r"https://.*\.vercel\.app" if settings.ENVIRONMENT == "production" else None,
+    allow_origins=["*"] if settings.ENVIRONMENT == "development" else origins,
+    allow_origin_regex=r"https://.*" if settings.ENVIRONMENT == "production" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
