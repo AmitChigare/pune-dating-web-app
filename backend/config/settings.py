@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     
     @property
     def ASYNC_DATABASE_URI(self) -> str:
-        base_uri = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        import urllib.parse
+        encoded_password = urllib.parse.quote_plus(self.POSTGRES_PASSWORD)
+        base_uri = f"postgresql+asyncpg://{self.POSTGRES_USER}:{encoded_password}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         if "supabase.co" in self.POSTGRES_HOST or "supabase.com" in self.POSTGRES_HOST:
             return f"{base_uri}?ssl=require"
         return base_uri
