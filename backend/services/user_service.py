@@ -158,6 +158,7 @@ class UserService:
                 and_(
                     Profile.user_id != current_user_id,
                     User.is_active == True,
+                    User.is_shadowbanned == False,
                     Profile.birth_date.between(min_birth_date, max_birth_date),
                     Profile.user_id.not_in(liked_subq),
                     Profile.user_id.not_in(blocked_subq),

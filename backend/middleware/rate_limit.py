@@ -14,26 +14,32 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json"):
             return await call_next(request)
             
+        # Dynamic limits based on path
+        is_login = request.url.path.endswith("/auth/login")
+        limit_requests = 5 if is_login else RATE_LIMIT_REQUESTS
+        limit_window = 900 if is_login else RATE_LIMIT_WINDOW
+        
         client_ip = request.client.host if request.client else "unknown"
         try:
             redis = await get_redis_pool()
             
             current_time = int(time.time())
-            window_start = current_time - RATE_LIMIT_WINDOW
+            window_start = current_time - limit_window
             
-            key = f"rate_limit:{client_ip}"
+            key_prefix = "rate_limit_login" if is_login else "rate_limit"
+            key = f"{key_prefix}:{client_ip}"
             
             # We use a sorted set to count requests in the rolling window
             async with redis.pipeline(transaction=True) as pipe:
                 pipe.zremrangebyscore(key, 0, window_start) # clean old requests
                 pipe.zcard(key) # count current requests
                 pipe.zadd(key, {str(current_time): current_time})
-                pipe.expire(key, RATE_LIMIT_WINDOW)
+                pipe.expire(key, limit_window)
                 results = await pipe.execute()
                 
             request_count = results[1]
             
-            if request_count >= RATE_LIMIT_REQUESTS:
+            if request_count >= limit_requests:
                 return JSONResponse(
                     status_code=429,
                     content={"detail": "Too many requests. Please try again later."}

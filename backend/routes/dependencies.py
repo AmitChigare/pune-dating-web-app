@@ -6,6 +6,7 @@ import uuid
 
 from config.settings import settings
 from config.database import get_db
+from config.redis import get_redis_pool
 from models.user import User, UserRole
 from services.user_service import UserService
 
@@ -22,8 +23,21 @@ async def get_current_user(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id: str = payload.get("sub")
-        if user_id is None:
+        jti: str = payload.get("jti")
+        
+        if user_id is None or jti is None:
             raise credentials_exception
+            
+        # Check if token is blacklisted in Redis
+        try:
+            redis = await get_redis_pool()
+            is_blacklisted = await redis.get(f"bl:{jti}")
+            if is_blacklisted:
+                raise HTTPException(status_code=401, detail="Token has been revoked")
+        except Exception as e:
+            # If redis fails, log it but don't fail authentication entirely (fail-open for resilience, or fail-closed based on security posture)
+            print(f"Redis blacklist check failed: {e}")
+
         token_type: str = payload.get("type")
         if token_type != "access":
             raise HTTPException(status_code=400, detail="Invalid token type")

@@ -5,15 +5,15 @@ from datetime import date
 from config.settings import settings
 
 class ProfileBase(BaseModel):
-    first_name: str = Field(..., max_length=50)
-    last_name: Optional[str] = Field(None, max_length=50)
-    bio: Optional[str] = None
+    first_name: str = Field(..., min_length=1, max_length=50, pattern=r"^[A-Za-z\s\-]+$")
+    last_name: Optional[str] = Field(None, max_length=50, pattern=r"^[A-Za-z\s\-]*$")
+    bio: Optional[str] = Field(None, max_length=500)
     birth_date: date
-    gender: str
-    interested_in: str
+    gender: str = Field(..., max_length=20)
+    interested_in: str = Field(..., max_length=20)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    phone_number: Optional[str] = None
+    phone_number: Optional[str] = Field(None, max_length=15, pattern=r"^\+?[1-9]\d{1,14}$")
 
 class ProfileCreate(ProfileBase):
     @field_validator('latitude', 'longitude')
@@ -26,14 +26,14 @@ class ProfileCreate(ProfileBase):
         return v
 
 class ProfileUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, max_length=50)
-    last_name: Optional[str] = Field(None, max_length=50)
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    interested_in: Optional[str] = None
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50, pattern=r"^[A-Za-z\s\-]+$")
+    last_name: Optional[str] = Field(None, max_length=50, pattern=r"^[A-Za-z\s\-]*$")
+    bio: Optional[str] = Field(None, max_length=500)
+    gender: Optional[str] = Field(None, max_length=20)
+    interested_in: Optional[str] = Field(None, max_length=20)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    phone_number: Optional[str] = None
+    phone_number: Optional[str] = Field(None, max_length=15, pattern=r"^\+?[1-9]\d{1,14}$")
 
 class ProfileResponse(ProfileBase):
     id: uuid.UUID

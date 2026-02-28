@@ -28,10 +28,10 @@ export default function RegisterPage() {
         try {
             await authService.register(email, password);
             // Auto login after registration
-            const { access_token } = await authService.login(email, password);
-            useAuthStore.setState({ token: access_token });
+            const { access_token, refresh_token } = await authService.login(email, password);
+            useAuthStore.setState({ token: access_token, refreshToken: refresh_token });
             const user = await userService.getMe();
-            setAuth(access_token, user);
+            setAuth(access_token, refresh_token, user);
 
             router.push('/onboarding');
         } catch (err: any) {

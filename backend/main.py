@@ -2,7 +2,9 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
 from middleware.rate_limit import RateLimitMiddleware
-from routes import auth, users, photos, matches, chat, admin
+from middleware.security_headers import SecurityHeadersMiddleware
+from middleware.logging import StructLoggerMiddleware
+from routes import auth, users, photos, matches, chat, admin, reports
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -12,15 +14,22 @@ app = FastAPI(
 )
 
 # CORS
+origins = [
+    settings.FRONTEND_URL,
+    "http://localhost:3000",
+] if settings.ENVIRONMENT == "production" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with specific origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Rate limiting
+# Security, Logging, and Rate limiting
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(StructLoggerMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
 # Serve static uploads
@@ -34,7 +43,12 @@ app.include_router(photos.router, prefix=f"{settings.API_V1_STR}/photos", tags=[
 app.include_router(matches.router, prefix=f"{settings.API_V1_STR}/matches", tags=["matches"])
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["chat"])
 app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin"])
+app.include_router(reports.router, prefix=f"{settings.API_V1_STR}/reports", tags=["reports"])
 
 @app.get("/")
 def root():
     return {"message": "Welcome to the Dating App API. Docs at /docs"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}

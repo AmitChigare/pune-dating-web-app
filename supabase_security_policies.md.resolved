@@ -1,0 +1,65 @@
+# Supabase Security Hardening
+
+To complete the backend security architecture, you must manually apply these Row-Level Security (RLS) policies and Storage restrictions directly within your Supabase Dashboard. This ensures that even if an attacker attempts to call your Supabase database directly (bypassing the backend), they will be blocked.
+
+## 1. Enforce Row-Level Security (RLS) on all tables
+
+Execute the following SQL inside the **SQL Editor** in your Supabase Dashboard:
+
+```sql
+-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_actions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_activity ENABLE ROW LEVEL SECURITY;
+
+-- Since the backend uses a direct PostgreSQL connection with the Supabase connection string
+-- (which likely uses the postgres/postgres role), it bypasses RLS automatically.
+-- The RLS policies below explicitly completely lock down the public API (anon keys)
+-- so that no one can access the database directly from a frontend or external script using the Supabase API URL.
+
+CREATE POLICY "Block all public access to users" ON users FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to profiles" ON profiles FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to photos" ON photos FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to prompts" ON prompts FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to matches" ON matches FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to likes" ON likes FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to blocks" ON blocks FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to chat_messages" ON chat_messages FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to reports" ON reports FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to admin_actions" ON admin_actions FOR ALL TO public USING (false);
+CREATE POLICY "Block all public access to user_activity" ON user_activity FOR ALL TO public USING (false);
+```
+
+## 2. Secure Storage Buckets
+
+Execute the following SQL to lock down your Storage buckets. This ensures that files can only be read, but absolutely no public uploads are permitted directly via Supabase. All uploads must be routed through your secure FastAPI backend, which handles file size limitations and validation.
+
+```sql
+-- Ensure the bucket exists
+INSERT INTO storage.buckets (id, name, public) VALUES ('dating-app-photos', 'dating-app-photos', true) ON CONFLICT DO NOTHING;
+
+-- Drop any existing permissive policies
+DROP POLICY IF EXISTS "Give public access to dating-app-photos" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+
+-- Allow public read access to the photos
+CREATE POLICY "Public Read Access" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'dating-app-photos');
+
+-- Explicitly deny public INSERT, UPDATE, DELETE (Anon keys)
+CREATE POLICY "Deny Public Insert" ON storage.objects FOR INSERT TO public USING (false);
+CREATE POLICY "Deny Public Update" ON storage.objects FOR UPDATE TO public USING (false);
+CREATE POLICY "Deny Public Delete" ON storage.objects FOR DELETE TO public USING (false);
+```
+
+### Important Note
+Because your FastAPI application connects to Supabase using the raw PostgreSQL connection string (`postgresql://postgres:...`), it operates as a super-user/service-role and can automatically bypass these RLS restrictions. This is exactly what we want: the FastAPI backend handles all the security and validation, while the database is locked down tight to the outside world.

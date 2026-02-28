@@ -53,11 +53,11 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const { access_token } = await authService.login(email, password);
+            const { access_token, refresh_token } = await authService.login(email, password);
             // Temporarily set token in stateless store to fetch me
-            useAuthStore.setState({ token: access_token });
+            useAuthStore.setState({ token: access_token, refreshToken: refresh_token });
             const user = await userService.getMe();
-            setAuth(access_token, user);
+            setAuth(access_token, refresh_token, user);
 
             try {
                 const profile = await userService.getProfile();

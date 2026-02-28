@@ -1,0 +1,54 @@
+# Production Security Hardening & Abuse Prevention Plan
+
+## Goal Description
+Perform a comprehensive security audit and implement hardening measures across the FastAPI backend, Supabase database, Render deployment, and Upstash Redis cache. This includes adding an abuse prevention system with daily limits, shadowbanning, and reporting.
+
+## User Review Required
+> [!IMPORTANT]
+> This plan introduces many new backend features and strict limits. Please review the proposed **Abuse Prevention limits** (e.g., daily likes, message caps) to ensure they align with your business goals before we implement them.
+> 
+> Also, implementing **Token Blacklisting** and **Refresh Tokens** completely changes the authentication flow. Are you okay with users needing to re-authenticate if their session expires?
+
+## Proposed Changes
+
+### 1. Authentication & Security Headers (Backend)
+- Add comprehensive security headers using a middleware (`X-Frame-Options`, `HSTS`, `CSP`).
+- Implement Refresh Tokens and an endpoint to refresh access tokens.
+- Add Token Blacklisting (via Redis) to invalidate tokens on logout/ban.
+- Enforce strict CORS (only Vercel domain).
+- Genericize error messages to prevent data leakage.
+
+### 2. Abuse Prevention & Rate Limiting (Backend/Redis)
+- **Granular Rate Limiting:**
+  - Login: 5 attempts / 15 mins (brute-force protection).
+  - Messaging: 30 msgs / min limit.
+  - Global API: 100 req / minute.
+- **Daily Limits (Redis):** 
+  - Free users: Max 50 likes per day.
+- **Shadowban System:**
+  - Add `is_shadowbanned` boolean to [users](file:///c:/Users/amitg/Desktop/Dating/backend/routes/admin.py#70-80) table.
+  - Shadowbanned users can still "swipe" and "message", but their swipes are ignored and messages are only visible to themselves.
+- **Reporting System:**
+  - Create a new [Report](file:///c:/Users/amitg/Desktop/Dating/frontend/types/index.ts#52-61) model.
+  - Auto-suspend user if they reach 5 unresolved reports.
+
+### 3. Input Validation & Logging
+- Update Pydantic schemas (e.g., [schemas/user.py](file:///c:/Users/amitg/Desktop/Dating/backend/schemas/user.py), `schemas/message.py`) to enforce strict `max_length` and regex constraints on fields (bio, name, messages).
+- Add Request ID logging middleware and structured JSON logging.
+
+### 4. Supabase Hardening (SQL)
+- Enable Row-Level Security (RLS) on all tables.
+- Write strict policies (e.g., users can only update their own profile, only read matched profiles).
+- Secure the `dating-app-photos` bucket: No public uploads, file size limits (5MB), allowed MIME types (jpeg, png, webp).
+
+### 5. Render & Deployment Best Practices
+- Add a `/health` endpoint for Render zero-downtime deploys.
+- Document environment separation and CI/CD best practices.
+
+## Verification Plan
+### Automated Tests
+- Test rate limits by intentionally triggering HTTP 429.
+- Test shadowbanning to ensure actions fail silently.
+### Manual Verification
+- Deploy to Render, connect via Vercel frontend, and test the daily like limit.
+- Apply Supabase RLS policies via SQL editor and attempt unauthorized data access using Anon keys.

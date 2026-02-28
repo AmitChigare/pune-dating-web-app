@@ -7,7 +7,7 @@ export const authService = {
         const formData = new URLSearchParams();
         formData.append('username', email);
         formData.append('password', password);
-        const { data } = await apiClient.post<{ access_token: string }>('/auth/login', formData, {
+        const { data } = await apiClient.post<{ access_token: string, refresh_token: string }>('/auth/login', formData, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
         return data;

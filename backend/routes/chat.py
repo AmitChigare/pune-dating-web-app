@@ -8,6 +8,8 @@ from routes.dependencies import get_current_user
 from services.chat_service import ChatService, manager
 from jose import jwt, JWTError
 from config.settings import settings
+from config.redis import get_redis_pool
+import time
 from typing import List
 from schemas.chat import MessageResponse
 
@@ -43,6 +45,11 @@ async def websocket_endpoint(websocket: WebSocket, match_id: uuid.UUID, token: s
             await websocket.close(code=1008)
             return
 
+        # Check if current user is shadowbanned
+        user_record = await db.execute(select(User).where(User.id == user_id))
+        user_entity = user_record.scalars().first()
+        is_shadowbanned = user_entity.is_shadowbanned if user_entity else False
+
         await manager.connect(user_id, websocket)
         chat_service = ChatService(db)
 
@@ -50,18 +57,42 @@ async def websocket_endpoint(websocket: WebSocket, match_id: uuid.UUID, token: s
         peer_id = match.user1_id if match.user2_id == user_id else match.user2_id
 
         try:
+            redis = await get_redis_pool()
             while True:
                 data = await websocket.receive_text()
+                
+                # Check message rate limit (30 msgs / 60 seconds)
+                try:
+                    current_time = int(time.time())
+                    window_start = current_time - 60
+                    key = f"rate_limit_msg:{user_id}"
+                    
+                    async with redis.pipeline(transaction=True) as pipe:
+                        pipe.zremrangebyscore(key, 0, window_start)
+                        pipe.zcard(key)
+                        pipe.zadd(key, {str(current_time): current_time})
+                        pipe.expire(key, 60)
+                        results = await pipe.execute()
+                    
+                    if results[1] >= 30:
+                        await websocket.send_json({"error": "Message rate limit exceeded. Slow down."})
+                        continue
+                except Exception as e:
+                    print(f"Chat rate limit redis error: {e}")
+                    pass
+                
                 # Save to db
                 msg = await chat_service.save_message(match_id, user_id, data)
-                # Send to peer
-                message_data = {
-                    "id": str(msg.id),
-                    "match_id": str(match_id),
-                    "sender_id": str(user_id),
-                    "content": data
-                }
-                await manager.send_personal_message(message_data, peer_id)
+                
+                # Send to peer ONLY if not shadowbanned
+                if not is_shadowbanned:
+                    message_data = {
+                        "id": str(msg.id),
+                        "match_id": str(match_id),
+                        "sender_id": str(user_id),
+                        "content": data
+                    }
+                    await manager.send_personal_message(message_data, peer_id)
         except WebSocketDisconnect:
             manager.disconnect(user_id, websocket)
 
