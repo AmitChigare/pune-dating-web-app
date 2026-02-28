@@ -45,9 +45,13 @@ export default function OnboardingPage() {
             (geoError) => {
                 setIsLocating(false);
                 if (geoError.code === geoError.PERMISSION_DENIED) {
-                    setLocationError("Please allow location access to use Pune Dating.");
+                    setLocationError("Location permission denied. You must enable Location Services in your browser settings (Site Settings → Location → Allow) and try again.");
+                } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
+                    setLocationError("Location information is unavailable. Please ensure your device GPS is turned on.");
+                } else if (geoError.code === geoError.TIMEOUT) {
+                    setLocationError("The request to get user location timed out. Please try again.");
                 } else {
-                    setLocationError("Could not get your location. Please try again.");
+                    setLocationError("Could not get your location. Please check your browser permissions.");
                 }
             },
             {
