@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Redis
     REDIS_HOST: str = "redis"
     REDIS_PORT: str = "6379"
+    REDIS_PASSWORD: Optional[str] = None
     
     # Auth
     SECRET_KEY: str = "replace_me_with_a_secure_random_string_in_production"
@@ -31,7 +32,10 @@ class Settings(BaseSettings):
     
     @property
     def ASYNC_DATABASE_URI(self) -> str:
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        base_uri = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        if "supabase.co" in self.POSTGRES_HOST or "supabase.com" in self.POSTGRES_HOST:
+            return f"{base_uri}?ssl=require"
+        return base_uri
     
     class Config:
         case_sensitive = True
