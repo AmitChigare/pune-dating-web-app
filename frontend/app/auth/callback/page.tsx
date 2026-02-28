@@ -49,10 +49,11 @@ export default function AuthCallback() {
                     setStatus("Almost there! Ready for your profile...");
                     router.push('/onboarding');
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error during Google OAuth backend handoff', err);
-                setStatus("Something went wrong. Redirecting to login...");
-                setTimeout(() => router.push('/login'), 3000);
+                const serverMsg = err.response?.data?.detail || err.message || "Unknown server error";
+                setStatus(`Handoff failed: ${serverMsg}. Please try again.`);
+                setTimeout(() => router.push('/login'), 5000);
             }
         };
 

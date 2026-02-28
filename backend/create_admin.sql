@@ -1,3 +1,7 @@
+-- Force add 'admin' enum value if it doesn't already exist
+ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'admin';
+COMMIT;
+
 -- Run this in your Supabase SQL Editor to manually insert the Admin User
 -- Password is 'PuneAdmin2026!'
 
