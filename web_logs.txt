@@ -1,0 +1,100 @@
+﻿web-1  | 2026-02-26 20:56:59,344 INFO sqlalchemy.engine.Engine COMMIT
+web-1  | 2026-02-26 20:56:59,352 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+web-1  | 2026-02-26 20:56:59,353 INFO sqlalchemy.engine.Engine SELECT messages.match_id, messages.sender_id, messages.content, messages.is_read, messages.id, messages.created_at, messages.updated_at 
+web-1  | FROM messages 
+web-1  | WHERE messages.id = $1::UUID
+web-1  | 2026-02-26 20:56:59,354 INFO sqlalchemy.engine.Engine [cached since 888.2s ago] (UUID('905223fe-309a-4715-a15c-214a4cef827f'),)
+web-1  | WARNING:  WatchFiles detected changes in 'services/photo_service.py'. Reloading...
+web-1  | INFO:     Shutting down
+web-1  | INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
+web-1  | INFO:     connection closed
+web-1  | INFO:     connection closed
+web-1  | 2026-02-26 21:05:41,658 INFO sqlalchemy.engine.Engine ROLLBACK
+web-1  | 2026-02-26 21:05:41,707 INFO sqlalchemy.engine.Engine ROLLBACK
+web-1  | INFO:     Waiting for application shutdown.
+web-1  | INFO:     Application shutdown complete.
+web-1  | INFO:     Finished server process [45]
+web-1  | WARNING:  WatchFiles detected changes in 'routes/photos.py'. Reloading...
+web-1  | Process SpawnProcess-5:
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+web-1  |     self.run()
+web-1  |   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+web-1  |     self._target(*self._args, **self._kwargs)
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+web-1  |     target(sockets=sockets)
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+web-1  |     return asyncio.run(self.serve(sockets=sockets))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+web-1  |     return runner.run(main)
+web-1  |            ^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+web-1  |     return self._loop.run_until_complete(task)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+web-1  |     config.load()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+web-1  |     self.loaded_app = import_from_string(self.app)
+web-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+web-1  |     module = importlib.import_module(module_str)
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+web-1  |     return _bootstrap._gcd_import(name[level:], package, level)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+web-1  |   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+web-1  |   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+web-1  |   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+web-1  |   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+web-1  |   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+web-1  |   File "/app/main.py", line 5, in <module>
+web-1  |     from routes import auth, users, photos, matches, chat, admin
+web-1  |   File "/app/routes/photos.py", line 25, in <module>
+web-1  |     photo_id: uuid.UUID,
+web-1  |               ^^^^
+web-1  | NameError: name 'uuid' is not defined
+web-1  | WARNING:  WatchFiles detected changes in 'create_100_dummies.py'. Reloading...
+web-1  | Process SpawnProcess-6:
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+web-1  |     self.run()
+web-1  |   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+web-1  |     self._target(*self._args, **self._kwargs)
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+web-1  |     target(sockets=sockets)
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+web-1  |     return asyncio.run(self.serve(sockets=sockets))
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+web-1  |     return runner.run(main)
+web-1  |            ^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+web-1  |     return self._loop.run_until_complete(task)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+web-1  |     config.load()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+web-1  |     self.loaded_app = import_from_string(self.app)
+web-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+web-1  |     module = importlib.import_module(module_str)
+web-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+web-1  |     return _bootstrap._gcd_import(name[level:], package, level)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+web-1  |   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+web-1  |   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+web-1  |   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+web-1  |   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+web-1  |   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+web-1  |   File "/app/main.py", line 5, in <module>
+web-1  |     from routes import auth, users, photos, matches, chat, admin
+web-1  |   File "/app/routes/photos.py", line 25, in <module>
+web-1  |     photo_id: uuid.UUID,
+web-1  |               ^^^^
+web-1  | NameError: name 'uuid' is not defined
