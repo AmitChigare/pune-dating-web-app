@@ -42,19 +42,23 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
 
 @router.post("/google/callback", response_model=Token)
 async def google_callback(request: __import__('schemas').user.GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
-    if not settings.SUPABASE_URL:
-        raise HTTPException(status_code=500, detail="Supabase URL not configured on backend")
+    if not settings.SUPABASE_URL or not settings.SUPABASE_KEY:
+        raise HTTPException(status_code=500, detail="Supabase credentials not configured on backend")
         
     auth_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/user"
     
     async with httpx.AsyncClient() as client:
         response = await client.get(
             auth_url,
-            headers={"Authorization": f"Bearer {request.access_token}"}
+            headers={
+                "Authorization": f"Bearer {request.access_token}",
+                "apikey": settings.SUPABASE_KEY
+            }
         )
         
         if response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid Supabase Session")
+            error_detail = response.json().get("msg", "Invalid Supabase Session") if response.content else "Invalid Supabase Session"
+            raise HTTPException(status_code=401, detail=error_detail)
             
         user_data = response.json()
         
