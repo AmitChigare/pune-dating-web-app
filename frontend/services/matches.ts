@@ -13,5 +13,10 @@ export const matchService = {
             is_superlike: isSuperlike
         });
         return data;
+    },
+
+    blockUser: async (peerId: string) => {
+        const { data } = await apiClient.post(`/matches/${peerId}/block`);
+        return data;
     }
 };

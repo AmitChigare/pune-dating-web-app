@@ -12,6 +12,7 @@ class MatchResponse(BaseModel):
     user2_id: uuid.UUID
     is_active: bool
     created_at: datetime
+    peer_profile: dict | None = None
 
     class Config:
         from_attributes = True

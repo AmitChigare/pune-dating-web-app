@@ -50,11 +50,26 @@ async def websocket_endpoint(websocket: WebSocket, match_id: uuid.UUID, token: s
         user_entity = user_record.scalars().first()
         is_shadowbanned = user_entity.is_shadowbanned if user_entity else False
 
-        await manager.connect(user_id, websocket)
-        chat_service = ChatService(db)
-
         # Get peer id
         peer_id = match.user1_id if match.user2_id == user_id else match.user2_id
+
+        # Check if block exists
+        from models.block import Block
+        from sqlalchemy import and_
+        block_check = await db.execute(
+            select(Block).where(
+                or_(
+                    and_(Block.blocker_id == user_id, Block.blocked_id == peer_id),
+                    and_(Block.blocker_id == peer_id, Block.blocked_id == user_id)
+                )
+            )
+        )
+        if block_check.scalars().first():
+            await websocket.close(code=1008)
+            return
+
+        await manager.connect(user_id, websocket)
+        chat_service = ChatService(db)
 
         try:
             redis = await get_redis_pool()

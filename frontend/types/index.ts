@@ -31,13 +31,19 @@ export interface Photo {
     order: number;
 }
 
+export interface PeerProfile {
+    first_name: string;
+    bio?: string;
+    photos?: { url: string; is_primary: boolean }[];
+}
+
 export interface Match {
     id: string;
     user1_id: string;
     user2_id: string;
     is_active: boolean;
     created_at: string;
-    peer_profile?: Profile; // hydrated on frontend
+    peer_profile?: PeerProfile;
 }
 
 export interface Message {

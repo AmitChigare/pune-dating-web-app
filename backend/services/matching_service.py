@@ -51,14 +51,26 @@ class MatchingService:
 
     async def get_matches(self, user_id: uuid.UUID):
         # A match involves user_id as either user1_id or user2_id
-        from sqlalchemy import or_
+        from sqlalchemy import or_, and_, not_, exists
         from sqlalchemy.orm import selectinload
         from models.profile import Profile
         from models.user import User
+        from models.block import Block
+
+        # Subquery to check for blocks between the two users
+        block_exists = exists().where(
+            or_(
+                and_(Block.blocker_id == user_id, Block.blocked_id == Match.user1_id),
+                and_(Block.blocker_id == user_id, Block.blocked_id == Match.user2_id),
+                and_(Block.blocked_id == user_id, Block.blocker_id == Match.user1_id),
+                and_(Block.blocked_id == user_id, Block.blocker_id == Match.user2_id)
+            )
+        )
 
         qry = select(Match).where(
             or_(Match.user1_id == user_id, Match.user2_id == user_id),
-            Match.is_active == True
+            Match.is_active == True,
+            not_(block_exists)
         )
         result = await self.db.execute(qry)
         matches = result.scalars().all()
@@ -68,7 +80,14 @@ class MatchingService:
             profile_qry = select(Profile).join(User, Profile.user_id == User.id).options(selectinload(Profile.user).selectinload(User.photos)).where(Profile.user_id == peer_id)
             peer_profile = (await self.db.execute(profile_qry)).scalars().first()
             if peer_profile:
-                setattr(peer_profile, 'photos', getattr(peer_profile.user, 'photos', []))
-            setattr(match, 'peer_profile', peer_profile)
+                # Convert to dict for the Pydantic peer_profile: dict | None field
+                photos = getattr(peer_profile.user, 'photos', [])
+                match.peer_profile = {
+                    "first_name": peer_profile.first_name,
+                    "bio": peer_profile.bio,
+                    "photos": [{"url": p.url, "is_primary": p.is_primary} for p in photos]
+                }
+            else:
+                match.peer_profile = None
 
         return matches

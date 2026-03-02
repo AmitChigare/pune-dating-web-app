@@ -47,9 +47,9 @@ export default function MatchesPage() {
                     <div className="grid grid-cols-2 gap-4">
                         {matches.map(match => {
                             // Real app would populate peer_profile from backend
-                            // We'll show placeholders since match payload might miss nested details depending on ORM joining
                             const peerName = match.peer_profile?.first_name || 'Match User';
-                            const photo = match.peer_profile?.photos?.[0]?.url || 'https://via.placeholder.com/150';
+                            const activePhoto = match.peer_profile?.photos?.find(p => p.is_primary) || match.peer_profile?.photos?.[0];
+                            const photo = activePhoto?.url || 'https://via.placeholder.com/150';
                             const isUnread = unreadMatches[match.id];
 
                             return (
