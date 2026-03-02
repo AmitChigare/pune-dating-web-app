@@ -17,7 +17,11 @@ export function useWebSocket(matchId: string) {
         if (!token || !matchId) return;
 
         // Use native webSocket to actually work with our FastAPI backend
-        const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/v1/chat/ws';
+        const WS_URL = process.env.NEXT_PUBLIC_WS_URL ||
+            (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+                ? 'wss://pune-dating-api.onrender.com/api/v1/chat/ws'
+                : 'ws://localhost:8000/api/v1/chat/ws');
+
         const ws = new WebSocket(`${WS_URL}/${matchId}?token=${token}`);
 
         ws.onmessage = (event) => {
