@@ -4,6 +4,7 @@ import uuid
 
 from config.database import get_db, AsyncSessionLocal
 from models.match import Match
+from models.user import User
 from routes.dependencies import get_current_user
 from services.chat_service import ChatService, manager
 from jose import jwt, JWTError

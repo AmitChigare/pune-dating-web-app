@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { matchService } from '@/services/matches';
 import { Match } from '@/types';
 import { useMatchStore } from '@/store/useMatchStore';
-import Image from 'next/image';
+import { getImageUrl } from '@/utils/imageUrl';
 
 export default function MatchesPage() {
     const { user } = useAuth(true);
@@ -49,13 +49,13 @@ export default function MatchesPage() {
                             // Real app would populate peer_profile from backend
                             const peerName = match.peer_profile?.first_name || 'Match User';
                             const activePhoto = match.peer_profile?.photos?.find(p => p.is_primary) || match.peer_profile?.photos?.[0];
-                            const photo = activePhoto?.url || 'https://via.placeholder.com/150';
+                            const photo = getImageUrl(activePhoto?.url);
                             const isUnread = unreadMatches[match.id];
 
                             return (
                                 <Link key={match.id} href={`/chat/${match.id}`} className="block group">
                                     <div className="relative aspect-[3/4] rounded-xl overflow-hidden card-shadow">
-                                        <Image src={photo} alt={peerName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <img src={photo} alt={peerName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 pb-4">
                                             <span className="text-white font-medium block truncate flex items-center justify-between">
                                                 {peerName}

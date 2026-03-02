@@ -8,6 +8,7 @@ import { chatService } from '@/services/chat';
 import { matchService } from '@/services/matches';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useMatchStore } from '@/store/useMatchStore';
+import { getImageUrl } from '@/utils/imageUrl';
 import Link from 'next/link';
 import { ChatBubble } from '@/components/ChatBubble';
 import { Input } from '@/components/Input';
@@ -25,7 +26,7 @@ export default function ChatPage({ params }: { params: { matchId: string } }) {
     const match = matches.find((m) => m.id === params.matchId);
     const peerName = match?.peer_profile?.first_name || 'Match User';
     const activePhoto = match?.peer_profile?.photos?.find(p => p.is_primary) || match?.peer_profile?.photos?.[0];
-    const photo = activePhoto?.url || 'https://via.placeholder.com/40';
+    const photo = getImageUrl(activePhoto?.url);
     const peerId = match?.user1_id === user?.id ? match?.user2_id : match?.user1_id;
 
     const messages = chatMessages[params.matchId] || [];
