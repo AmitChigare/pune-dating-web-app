@@ -20,3 +20,4 @@ class User(BaseModel):
     profile: Mapped["Profile"] = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     photos: Mapped[list["Photo"]] = relationship("Photo", back_populates="user", cascade="all, delete-orphan")
     prompts: Mapped[list["Prompt"]] = relationship("Prompt", back_populates="user", cascade="all, delete-orphan")
+    streak: Mapped["UserStreak"] = relationship("UserStreak", back_populates="user", uselist=False, cascade="all, delete-orphan")

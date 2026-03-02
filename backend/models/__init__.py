@@ -10,6 +10,7 @@ from models.report import Report, ReportStatus
 from models.block import Block
 from models.admin_action import AdminAction
 from models.user_activity import UserActivity
+from models.streak import UserStreak
 
 # Expose everything needed for alembic and relationships in a single import
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "Profile", "Photo", "Prompt",
     "Like", "Match", "Message",
     "Report", "ReportStatus",
-    "Block", "AdminAction", "UserActivity"
+    "Block", "AdminAction", "UserActivity",
+    "UserStreak"
 ]

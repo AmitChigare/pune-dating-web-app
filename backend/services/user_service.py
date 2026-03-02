@@ -14,11 +14,17 @@ class UserService:
         self.db = db
 
     async def get_user_by_email(self, email: str) -> User | None:
-        result = await self.db.execute(select(User).where(User.email == email))
+        from sqlalchemy.orm import selectinload
+        result = await self.db.execute(
+            select(User).where(User.email == email).options(selectinload(User.streak))
+        )
         return result.scalars().first()
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User | None:
-        result = await self.db.execute(select(User).where(User.id == user_id))
+        from sqlalchemy.orm import selectinload
+        result = await self.db.execute(
+            select(User).where(User.id == user_id).options(selectinload(User.streak))
+        )
         return result.scalars().first()
 
     async def create_user(self, user_in: UserCreate) -> User:

@@ -8,7 +8,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { userService } from '@/services/users';
 import Image from 'next/image';
-import { Settings as SettingsIcon, LogOut, Plus, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, LogOut, Plus, Trash2, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -108,7 +108,22 @@ export default function ProfilePage() {
                             <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="text-center font-bold text-xl" />
                         </div>
                     ) : (
-                        <h2 className="text-2xl font-bold mt-4">{profile.first_name} {profile.last_name || ''}</h2>
+                        <div className="flex flex-col items-center">
+                            <h2 className="text-2xl font-bold mt-4">{profile.first_name} {profile.last_name || ''}</h2>
+                            {user?.streak && user.streak.current_streak > 0 && (
+                                <div className="flex flex-col items-center mt-2 group cursor-help transition-all">
+                                    <div className="flex items-center gap-1.5 bg-orange-50 text-orange-500 px-3 py-1 rounded-full text-sm font-bold border border-orange-200 shadow-sm">
+                                        <Flame size={16} className={user.streak.current_streak >= 3 ? "fill-orange-500 animate-pulse" : ""} />
+                                        {user.streak.current_streak} Day Streak
+                                    </div>
+                                    {user.streak.badges && user.streak.badges.length > 0 && (
+                                        <div className="mt-2 text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                                            🎖️ {user.streak.badges.map((b: string) => b.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')).join(', ')}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {isEditing ? (

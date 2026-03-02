@@ -1,5 +1,12 @@
 export type UserRole = "user" | "admin";
 
+export interface UserStreak {
+    current_streak: number;
+    longest_streak: number;
+    last_active_date?: string;
+    badges: string[];
+}
+
 export interface User {
     id: string;
     email: string;
@@ -7,6 +14,7 @@ export interface User {
     is_verified: boolean;
     role: UserRole;
     created_at: string;
+    streak?: UserStreak;
 }
 
 export interface Profile {

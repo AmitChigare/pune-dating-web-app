@@ -1,8 +1,14 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from models.user import UserRole
+
+class UserStreakResponse(BaseModel):
+    current_streak: int
+    longest_streak: int
+    last_active_date: Optional[date] = None
+    badges: list[str] = []
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -26,6 +32,7 @@ class UserResponse(BaseModel):
     role: UserRole
     created_at: datetime
     updated_at: datetime
+    streak: Optional[UserStreakResponse] = None
 
     class Config:
         from_attributes = True
