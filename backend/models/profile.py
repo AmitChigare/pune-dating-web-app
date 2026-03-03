@@ -1,7 +1,7 @@
 from sqlalchemy import String, Float, ForeignKey, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import BaseModel
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid
 import datetime
 
@@ -20,5 +20,8 @@ class Profile(BaseModel):
     # Location tracking
     latitude: Mapped[float] = mapped_column(Float, nullable=True)
     longitude: Mapped[float] = mapped_column(Float, nullable=True)
+
+    # Feature Vectors
+    interests: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="profile")

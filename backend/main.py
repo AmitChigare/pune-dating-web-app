@@ -8,11 +8,23 @@ from routes import auth, users, photos, matches, chat, admin, reports
 from fastapi.staticfiles import StaticFiles
 import os
 
+from contextlib import asynccontextmanager
+from tasks.cron import start_scheduler
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Start APScheduler
+    start_scheduler()
+    print("[INIT] Compatibility Scoring APScheduler configured.")
+    yield
+    # Shutdown logic goes here if needed
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     docs_url=None,
     redoc_url=None,
-    openapi_url=None
+    openapi_url=None,
+    lifespan=lifespan
 )
 
 # CORS

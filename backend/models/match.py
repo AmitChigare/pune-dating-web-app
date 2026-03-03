@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Boolean
+from sqlalchemy import ForeignKey, Boolean, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,6 +10,7 @@ class Match(BaseModel):
     user1_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True)
     user2_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    compatibility_score: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
 
     user1 = relationship("User", foreign_keys=[user1_id])
     user2 = relationship("User", foreign_keys=[user2_id])

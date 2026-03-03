@@ -14,6 +14,7 @@ class ProfileBase(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     phone_number: Optional[str] = Field(None, max_length=15, pattern=r"^\+?[1-9]\d{1,14}$")
+    interests: Optional[list[str]] = Field(None, max_length=20)
 
 class ProfileCreate(ProfileBase):
     @field_validator('latitude', 'longitude')
@@ -34,6 +35,7 @@ class ProfileUpdate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     phone_number: Optional[str] = Field(None, max_length=15, pattern=r"^\+?[1-9]\d{1,14}$")
+    interests: Optional[list[str]] = Field(None, max_length=20)
 
 class ProfileResponse(ProfileBase):
     id: uuid.UUID
